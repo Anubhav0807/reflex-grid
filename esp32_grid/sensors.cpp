@@ -1,6 +1,8 @@
 #include <Arduino.h>
+
 #include "laser_matrix.h"
 #include "session.h"
+#include "buzzer.h"
 
 const int n = 3;
 const int m = 4;
@@ -27,8 +29,10 @@ bool isCurrentPointTouched() {
 
 void scanYesNo() {
   if (digitalRead(sensorRow[1]) == HIGH && digitalRead(sensorCol[2]) == HIGH) {
+    beep(100);
     sessionStart();
   } else if (digitalRead(sensorRow[1]) == HIGH && digitalRead(sensorCol[1]) == HIGH) {
+    beep(100);
     farewellUser();
   }
 }

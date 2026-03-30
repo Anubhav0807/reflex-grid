@@ -5,12 +5,22 @@ The ESP32 activates lasers across a **3×4 grid**, creating visual targets for t
 
 The system is designed to support **hand-eye coordination training and response-time recovery**, making it suitable as a low-cost interactive tool for **upper-limb rehabilitation and physiotherapy exercises**, particularly for patients recovering from fractures or reduced motor responsiveness.
 
+## Create a esp32_grid/secrets.h file with the following secrets
+```cpp
+#pragma once
+
+#define WIFI_SSID "your_wifi_name"
+#define WIFI_PASS "your_wifi_password"
+
+#define BACKEND_URL "your_backend_url"
+```
+
 ## Gotchas & Debugging Notes
 
 ### 1. Floating Inputs (Major Bug Source)
 
 Using:
-```
+```cpp
 pinMode(pin, INPUT);
 ```
 causes **floating inputs**, which can randomly read HIGH or LOW.
@@ -18,7 +28,7 @@ causes **floating inputs**, which can randomly read HIGH or LOW.
 When the Arduino UNO powered on, the shared ground introduced small voltage changes, causing multiple false triggers.
 
 Fix:
-```
+```cpp
 pinMode(pin, INPUT_PULLDOWN);
 ```
 
@@ -42,7 +52,7 @@ Disconnect the wire from **UNO RX (pin 0)** before uploading.
 
 LCD updates occur when a newline `\n` is received.
 
-```
+```cpp
 if (ch == '\n') {
   lcd.setCursor(0, lineNum);
   lcd.print(message);

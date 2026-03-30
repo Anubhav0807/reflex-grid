@@ -1,19 +1,34 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <vector>
+
 #include "buzzer.h"
 #include "comm.h"
 #include "laser_matrix.h"
-
-#define SESSION_DURATION 60
+#include "http_client.h"
 
 int score;
 int timer;
+int sessionDuration;
 bool running = false;
 bool waiting = false;
 unsigned long timeStamp;
+unsigned long scoreTimeStamp;
+std::vector<unsigned long> responseTime;
 
 void sessionStart() {
   waiting = false;
   turnOffLasers();
+
+  // Get the duration of the session
+  sendMessage("Fetching user\npreferences...\n");
+  String payload = httpGet("/api/session-duration");
+  StaticJsonDocument<256> doc;
+  if (deserializeJson(doc, payload)) {
+    sessionDuration = 60; // default fallback value
+  } else {
+    sessionDuration = doc["duration"];
+  }
 
   sendMessage("Get Ready!\nStarting in 3...\n");
   beep(100);
@@ -26,8 +41,10 @@ void sessionStart() {
   delay(900);
 
   score = 0;
-  timer = SESSION_DURATION;
+  timer = sessionDuration;
+  responseTime.clear();
   timeStamp = millis();
+  scoreTimeStamp = millis();
   sendSessionState(timer, score);
   running = true;
   nextPoint();
@@ -38,14 +55,30 @@ void sessionEnd() {
   turnOffLasers();
   beep(500);
 
-  int responseTime;
+  int avgResponseTime;
   if (score > 0) {
-    responseTime = (SESSION_DURATION * 1000) / score;
+    avgResponseTime = (sessionDuration * 1000) / score;
   } else {
-    responseTime = -1;
+    avgResponseTime = -1;
   }
 
-  sendSessionResult(responseTime);
+  sendSessionResult(avgResponseTime);
+
+  String json = "{";
+  json += "\"score\":" + String(score) + ",";
+  json += "\"avgResponseTime\":" + String(avgResponseTime) + ",";
+  json += "\"responseTime\":[";
+
+  for (size_t i = 0; i < responseTime.size(); i++) {
+    json += String(responseTime[i]);
+    if (i < responseTime.size() - 1) {
+      json += ",";
+    }
+  }
+
+  json += "]}";
+  httpPost("/api/save-session-result", json);
+
   delay(3000);
   askForNewSession();
   promptYesNo();
@@ -69,6 +102,9 @@ void updateTimer() {
 void updateScore() {
   if (!running) return;
   score++;
+  unsigned long curTimeStamp = millis();
+  responseTime.push_back(curTimeStamp - scoreTimeStamp);
+  scoreTimeStamp = curTimeStamp;
   sendSessionState(timer, score);
 }
 
@@ -90,5 +126,4 @@ void farewellUser() {
   waiting = false;
   turnOffLasers();
   sendMessage("Stay responsive\nBye Bye...\n");
-  beep(100);
 }

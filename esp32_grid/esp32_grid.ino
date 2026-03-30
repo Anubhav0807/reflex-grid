@@ -3,22 +3,24 @@
 #include "session.h"
 #include "buzzer.h"
 #include "comm.h"
+#include "http_client.h"
 
 void setup() {
   laserInit();
   sensorInit();
   buzzerInit();
   commInit();
+  httpInit();
 
-  welcomeUser();  
+  welcomeUser();
 }
 
 void loop() {
   if (isRunning()) {
     if (isCurrentPointTouched()) {
       beep();         // buzzer feedback
-      nextPoint();    // move laser
       updateScore();  // increment score
+      nextPoint();  // move laser
     }
 
     updateTimer();

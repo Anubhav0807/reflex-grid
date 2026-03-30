@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <vector>
 
 #define RXD2 14
 #define TXD2 13
@@ -17,14 +18,14 @@ void sendSessionState(int remainingTime, int curScore) {
   Serial2.print("\n");
 }
 
-void sendSessionResult(int responseTime) {
+void sendSessionResult(int avgResponseTime) {
   Serial2.print("Time Up!");
   Serial2.print("\nRes Time: ");
-  Serial2.print(responseTime);
+  Serial2.print(avgResponseTime);
   Serial2.print("ms\n");
 }
 
-void sendMessage(String message) {
+void sendMessage(const String& message) {
   Serial2.print(message);
 }
 
